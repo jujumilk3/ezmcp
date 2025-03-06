@@ -1,4 +1,4 @@
-# EzMCP
+# ezmcp
 
 A FastAPI-style framework for using MCP (Model Context Protocol) with Server-Sent Events (SSE).
 
@@ -11,10 +11,10 @@ pip install ezmcp
 ## Quick Start
 
 ```python
-from ezmcp import EzMCP, TextContent
+from ezmcp import ezmcp, TextContent
 
-# Create an EzMCP application
-app = EzMCP("my-app")
+# Create an ezmcp application
+app = ezmcp("my-app")
 
 # Define a tool
 @app.tool(description="Echo a message back to the user")
@@ -38,12 +38,12 @@ if __name__ == "__main__":
 
 ## API Reference
 
-### EzMCP
+### ezmcp
 
 The main application class.
 
 ```python
-app = EzMCP(
+app = ezmcp(
     name="my-app",                # Name of the MCP server
     sse_path="/messages/",        # Path for SSE messages
     sse_endpoint="/sse",          # Endpoint for SSE connections
@@ -87,7 +87,7 @@ starlette_app = app.get_app()
 
 ## Documentation Page
 
-EzMCP automatically generates an interactive documentation page at `/docs` (configurable via the `docs_url` parameter). This page provides:
+ezmcp automatically generates an interactive documentation page at `/docs` (configurable via the `docs_url` parameter). This page provides:
 
 - A list of all available tools
 - Detailed information about each tool's parameters
@@ -95,11 +95,11 @@ EzMCP automatically generates an interactive documentation page at `/docs` (conf
 
 To access the documentation page, navigate to `http://your-server:port/docs` in your browser.
 
-![Documentation Page](https://via.placeholder.com/800x400?text=EzMCP+Documentation+Page)
+![Documentation Page](https://via.placeholder.com/800x400?text=ezmcp+Documentation+Page)
 
 ## Response Types
 
-EzMCP supports the following response types:
+ezmcp supports the following response types:
 
 - `TextContent`: Text content
 - `ImageContent`: Image content
@@ -128,8 +128,8 @@ resource = EmbeddedResource(type="embedded", url="https://example.com/resource")
 from starlette.applications import Starlette
 from starlette.routing import Mount
 
-# Create an EzMCP application
-app = EzMCP("my-app")
+# Create an ezmcp application
+app = ezmcp("my-app")
 
 # Define tools
 @app.tool()
@@ -153,7 +153,7 @@ main_app = Starlette(
 If you want to disable the documentation page, set `docs_url` to `None`:
 
 ```python
-app = EzMCP("my-app", docs_url=None)
+app = ezmcp("my-app", docs_url=None)
 ```
 
 ## License

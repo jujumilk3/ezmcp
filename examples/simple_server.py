@@ -1,12 +1,12 @@
 """
-A simple example of using EzMCP to create a server with tools.
+A simple example of using ezmcp to create a server with tools.
 """
 import httpx
 
-from ezmcp import EzMCP, ImageContent, TextContent
+from ezmcp import ImageContent, TextContent, ezmcp
 
-# Create an EzMCP application
-app = EzMCP("simple-server", debug=True)
+# Create an ezmcp application
+app = ezmcp("simple-server", debug=True)
 
 
 @app.tool(description="Echo a message back to the user")
@@ -19,7 +19,7 @@ async def echo(message: str):
 async def fetch_website(url: str):
     """Fetch a website and return its content."""
     headers = {
-        "User-Agent": "EzMCP Example (github.com/jujumilk3/ezmcp)"
+        "User-Agent": "ezmcp Example (github.com/jujumilk3/ezmcp)"
     }
     async with httpx.AsyncClient(follow_redirects=True, headers=headers) as client:
         response = await client.get(url)
@@ -41,7 +41,7 @@ async def greet(name: str = "World"):
 
 
 if __name__ == "__main__":
-    print("Starting EzMCP server on http://localhost:8000")
+    print("Starting ezmcp server on http://localhost:8000")
     print("Available tools:")
     for name, tool_info in app.tools.items():
         print(f"  - {name}: {tool_info['schema'].description}")

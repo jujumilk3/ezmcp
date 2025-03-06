@@ -1,17 +1,17 @@
 import pytest
 
-from ezmcp import EzMCP, TextContent
+from ezmcp import TextContent, ezmcp
 
 
 @pytest.fixture
 def app():
-    """Create a test EzMCP application."""
-    return EzMCP("test-app")
+    """Create a test ezmcp application."""
+    return ezmcp("test-app")
 
 
 def test_app_initialization():
-    """Test that the EzMCP application initializes correctly."""
-    app = EzMCP("test-app")
+    """Test that the ezmcp application initializes correctly."""
+    app = ezmcp("test-app")
     assert app.name == "test-app"
     assert app.sse_path == "/messages/"
     assert app.sse_endpoint == "/sse"
@@ -82,7 +82,7 @@ def test_starlette_app_creation(app):
 
 def test_docs_disabled():
     """Test that the docs endpoint can be disabled."""
-    app = EzMCP("test-app", docs_url=None)
+    app = ezmcp("test-app", docs_url=None)
     starlette_app = app.get_app()
     
     # Check routes

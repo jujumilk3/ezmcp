@@ -28,15 +28,15 @@ from ezmcp.templates import (
 from ezmcp.types import ParamInfo, Response, Tool, ToolFunc
 
 
-class EzMCP:
+class ezmcp:
     """
     A FastAPI-style framework for using MCP SSE.
     
     Example:
     ```python
-    from ezmcp import EzMCP, TextContent
+    from ezmcp import ezmcp, TextContent
     
-    app = EzMCP("my-app")
+    app = ezmcp("my-app")
     
     @app.tool("echo")
     async def echo(message: str):
@@ -56,7 +56,7 @@ class EzMCP:
         debug: bool = False
     ):
         """
-        Initialize the EzMCP application.
+        Initialize the ezmcp application.
         
         Args:
             name: The name of the MCP server

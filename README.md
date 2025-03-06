@@ -1,10 +1,10 @@
-# EzMCP
+# ezmcp
 
 A FastAPI-style framework for using MCP (Model Context Protocol) with Server-Sent Events (SSE).
 
 ## Overview
 
-EzMCP is a lightweight framework that makes it easy to create MCP-compatible servers using a FastAPI-like syntax. It provides a simple decorator-based API for defining tools that can be called by MCP clients.
+ezmcp is a lightweight framework that makes it easy to create MCP-compatible servers using a FastAPI-like syntax. It provides a simple decorator-based API for defining tools that can be called by MCP clients.
 
 ## Features
 
@@ -24,10 +24,10 @@ pip install ezmcp
 ## Quick Start
 
 ```python
-from ezmcp import EzMCP, TextContent
+from ezmcp import ezmcp, TextContent
 
-# Create an EzMCP application
-app = EzMCP("my-app")
+# Create an ezmcp application
+app = ezmcp("my-app")
 
 # Define a tool
 @app.tool(description="Echo a message back to the user")
