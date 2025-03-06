@@ -1,0 +1,39 @@
+[project]
+name = "ezmcp"
+description = "Easy-to-use MCP server framework specialized for SSE."
+authors = [{ name = "jujumilk3", email = "jujumilk3@gmail.com" }]
+requires-python = ">=3.10"
+readme = "README.md"
+license = { text = "MIT" }
+classifiers = [
+    "Typing :: Typed",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+]
+dynamic = ["version"]
+dependencies = ["mcp>=1.3.0,<=2.0.0"]
+
+[project.urls]
+homepage = "https://github.com/jujumilk3/ezmcp"
+bug-tracker = "https://github.com/jujumilk3/ezmcp/issues"
+
+[project.optional-dependencies]
+test = [
+    "pytest",
+]
+dev = [
+    "pytest",
+    "ruff",
+]
+
+[tool.pdm]
+version = { source = "file", path = "ezmcp/__init__.py" }
+distribution = true
+
