@@ -1,0 +1,253 @@
+import functools
+import inspect
+from typing import (
+    Annotated,
+    Any,
+    Callable,
+    Dict,
+    List,
+    Optional,
+    Type,
+    Union,
+    get_type_hints,
+)
+
+import mcp.types as mcp_types
+from mcp.server.lowlevel import Server
+from mcp.server.sse import SseServerTransport
+from starlette.applications import Starlette
+from starlette.routing import Mount, Route
+
+from ezmcp.types import ParamInfo, Response, Tool, ToolFunc
+
+
+class EzMCP:
+    """
+    A FastAPI-style framework for using MCP SSE.
+    
+    Example:
+    ```python
+    from ezmcp import EzMCP, TextContent
+    
+    app = EzMCP("my-app")
+    
+    @app.tool("echo")
+    async def echo(message: str):
+        return [TextContent(type="text", text=f"Echo: {message}")]
+    
+    if __name__ == "__main__":
+        app.run()
+    ```
+    """
+    
+    def __init__(
+        self, 
+        name: str, 
+        sse_path: str = "/messages", 
+        sse_endpoint: str = "/sse",
+        debug: bool = False
+    ):
+        """
+        Initialize the EzMCP application.
+        
+        Args:
+            name: The name of the MCP server
+            sse_path: The path for SSE messages
+            sse_endpoint: The endpoint for SSE connections
+            debug: Whether to enable debug mode
+        """
+        self.name = name
+        self.sse_path = sse_path
+        self.sse_endpoint = sse_endpoint
+        self.debug = debug
+        
+        # Initialize MCP components
+        self.sse = SseServerTransport(self.sse_path)
+        self.server = Server(self.name)
+        
+        # Store registered tools
+        self.tools: Dict[str, Dict[str, Any]] = {}
+        
+        # Set up server handlers
+        self._setup_server_handlers()
+        
+        # Create Starlette app
+        self.starlette_app = None
+    
+    def _setup_server_handlers(self):
+        """Set up the MCP server handlers."""
+        
+        @self.server.call_tool()
+        async def call_tool(
+            name: str, arguments: dict
+        ) -> Response:
+            if name not in self.tools:
+                raise ValueError(f"Unknown tool: {name}")
+            
+            tool_info = self.tools[name]
+            func = tool_info["func"]
+            
+            # Map arguments to function parameters
+            kwargs = {}
+            for param_name, param_info in tool_info["params"].items():
+                if param_name in arguments:
+                    kwargs[param_name] = arguments[param_name]
+                elif param_info.required:
+                    raise ValueError(f"Missing required argument '{param_name}' for tool '{name}'")
+                else:
+                    kwargs[param_name] = param_info.default
+            
+            return await func(**kwargs)
+        
+        @self.server.list_tools()
+        async def list_tools() -> List[mcp_types.Tool]:
+            return [tool_info["schema"] for tool_info in self.tools.values()]
+    
+    async def _handle_sse(self, request):
+        """Handle SSE connections."""
+        async with self.sse.connect_sse(
+            request.scope, request.receive, request._send
+        ) as streams:
+            await self.server.run(
+                streams[0], streams[1], self.server.create_initialization_options()
+            )
+    
+    def _create_starlette_app(self):
+        """Create the Starlette application."""
+        if self.starlette_app is None:
+            self.starlette_app = Starlette(
+                debug=self.debug,
+                routes=[
+                    Route(self.sse_endpoint, endpoint=self._handle_sse),
+                    Mount(self.sse_path, app=self.sse.handle_post_message),
+                ],
+            )
+        return self.starlette_app
+    
+    def _extract_param_info(self, func: Callable) -> Dict[str, ParamInfo]:
+        """Extract parameter information from a function."""
+        signature = inspect.signature(func)
+        type_hints = get_type_hints(func)
+        
+        params = {}
+        for name, param in signature.parameters.items():
+            # Skip self parameter for methods
+            if name == "self":
+                continue
+                
+            param_type = type_hints.get(name, Any)
+            has_default = param.default is not inspect.Parameter.empty
+            default_value = param.default if has_default else None
+            
+            # Extract description from docstring or annotations if available
+            description = None
+            if isinstance(param_type, type(Annotated)):
+                # Handle Annotated types for descriptions
+                pass
+            
+            params[name] = ParamInfo(
+                name=name,
+                type_=param_type,
+                required=not has_default,
+                description=description,
+                default=default_value
+            )
+        
+        return params
+    
+    def _create_tool_schema(self, name: str, description: str, params: Dict[str, ParamInfo]) -> Tool:
+        """Create a Tool schema from parameter information."""
+        properties = {}
+        required = []
+        
+        for param_name, param_info in params.items():
+            if param_info.required:
+                required.append(param_name)
+            
+            # Map Python types to JSON Schema types
+            if param_info.type in (str, Annotated[str, ...]):
+                type_name = "string"
+            elif param_info.type in (int, Annotated[int, ...]):
+                type_name = "integer"
+            elif param_info.type in (float, Annotated[float, ...]):
+                type_name = "number"
+            elif param_info.type in (bool, Annotated[bool, ...]):
+                type_name = "boolean"
+            elif param_info.type in (list, List, Annotated[list, ...], Annotated[List, ...]):
+                type_name = "array"
+            elif param_info.type in (dict, Dict, Annotated[dict, ...], Annotated[Dict, ...]):
+                type_name = "object"
+            else:
+                type_name = "string"  # Default to string for unknown types
+            
+            property_schema = {
+                "type": type_name,
+            }
+            
+            if param_info.description:
+                property_schema["description"] = param_info.description
+            
+            properties[param_name] = property_schema
+        
+        return Tool(
+            name=name,
+            description=description,
+            inputSchema={
+                "type": "object",
+                "required": required,
+                "properties": properties,
+            },
+        )
+    
+    def tool(self, name: Optional[str] = None, description: Optional[str] = None):
+        """
+        Decorator to register a function as a tool.
+        
+        Args:
+            name: The name of the tool (defaults to function name)
+            description: The description of the tool (defaults to function docstring)
+        """
+        def decorator(func: ToolFunc):
+            nonlocal name, description
+            
+            # Use function name if name not provided
+            if name is None:
+                name = func.__name__
+            
+            # Use function docstring if description not provided
+            if description is None:
+                description = inspect.getdoc(func) or f"Tool: {name}"
+            
+            # Extract parameter information
+            params = self._extract_param_info(func)
+            
+            # Create tool schema
+            schema = self._create_tool_schema(name, description, params)
+            
+            # Register tool
+            self.tools[name] = {
+                "func": func,
+                "params": params,
+                "schema": schema,
+            }
+            
+            return func
+        
+        return decorator
+    
+    def run(self, host: str = "0.0.0.0", port: int = 8000):
+        """
+        Run the application with uvicorn.
+        
+        Args:
+            host: The host to bind to
+            port: The port to bind to
+        """
+        import uvicorn
+        
+        app = self._create_starlette_app()
+        uvicorn.run(app, host=host, port=port)
+    
+    def get_app(self):
+        """Get the Starlette application."""
+        return self._create_starlette_app() 
