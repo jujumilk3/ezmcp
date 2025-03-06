@@ -50,7 +50,7 @@ class ezmcp:
     def __init__(
         self, 
         name: str, 
-        sse_path: str = "/messages/", 
+        sse_path: str = "/messages", 
         sse_endpoint: str = "/sse",
         docs_url: str = "/docs",
         debug: bool = False

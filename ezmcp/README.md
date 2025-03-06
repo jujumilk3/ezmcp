@@ -45,7 +45,7 @@ The main application class.
 ```python
 app = ezmcp(
     name="my-app",                # Name of the MCP server
-    sse_path="/messages/",        # Path for SSE messages
+    sse_path="/messages",        # Path for SSE messages
     sse_endpoint="/sse",          # Endpoint for SSE connections
     docs_url="/docs",             # URL for the documentation page (set to None to disable)
     debug=False                   # Whether to enable debug mode
