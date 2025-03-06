@@ -16,8 +16,15 @@ import mcp.types as mcp_types
 from mcp.server.lowlevel import Server
 from mcp.server.sse import SseServerTransport
 from starlette.applications import Starlette
+from starlette.responses import HTMLResponse
 from starlette.routing import Mount, Route
 
+from ezmcp.templates import (
+    DOCS_TEMPLATE,
+    FORM_INPUT_TEMPLATE,
+    PARAM_ROW_TEMPLATE,
+    TOOL_CARD_TEMPLATE,
+)
 from ezmcp.types import ParamInfo, Response, Tool, ToolFunc
 
 
@@ -43,8 +50,9 @@ class EzMCP:
     def __init__(
         self, 
         name: str, 
-        sse_path: str = "/messages", 
+        sse_path: str = "/messages/", 
         sse_endpoint: str = "/sse",
+        docs_url: str = "/docs",
         debug: bool = False
     ):
         """
@@ -54,11 +62,13 @@ class EzMCP:
             name: The name of the MCP server
             sse_path: The path for SSE messages
             sse_endpoint: The endpoint for SSE connections
+            docs_url: The URL for the documentation page
             debug: Whether to enable debug mode
         """
         self.name = name
         self.sse_path = sse_path
         self.sse_endpoint = sse_endpoint
+        self.docs_url = docs_url
         self.debug = debug
         
         # Initialize MCP components
@@ -112,15 +122,108 @@ class EzMCP:
                 streams[0], streams[1], self.server.create_initialization_options()
             )
     
+    async def _handle_docs(self, request):
+        """Handle documentation page requests."""
+        tools_html = ""
+        
+        # Sort tools by name for consistent display
+        sorted_tools = sorted(self.tools.items(), key=lambda x: x[0])
+        
+        for name, tool_info in sorted_tools:
+            schema = tool_info["schema"]
+            params = tool_info["params"]
+            
+            # Generate parameter rows for the table
+            params_rows = ""
+            form_inputs = ""
+            
+            # Sort parameters to put required ones first
+            sorted_params = sorted(
+                params.items(), 
+                key=lambda x: (not x[1].required, x[0])
+            )
+            
+            for param_name, param_info in sorted_params:
+                # Determine parameter type for display
+                if param_info.type in (str, Annotated[str, ...]):
+                    type_name = "string"
+                    input_type = "text"
+                elif param_info.type in (int, Annotated[int, ...]):
+                    type_name = "integer"
+                    input_type = "number"
+                elif param_info.type in (float, Annotated[float, ...]):
+                    type_name = "number"
+                    input_type = "number"
+                elif param_info.type in (bool, Annotated[bool, ...]):
+                    type_name = "boolean"
+                    input_type = "checkbox"
+                else:
+                    type_name = "string"
+                    input_type = "text"
+                
+                # Create parameter row
+                required_class = "required" if param_info.required else "optional"
+                required_text = "Yes" if param_info.required else "No"
+                
+                description = param_info.description or ""
+                if not param_info.required and param_info.default is not None:
+                    description += f" (Default: {param_info.default})"
+                
+                params_rows += PARAM_ROW_TEMPLATE.format(
+                    name=param_name,
+                    type=type_name,
+                    required_class=required_class,
+                    required_text=required_text,
+                    description=description
+                )
+                
+                # Create form input
+                required_mark = " *" if param_info.required else ""
+                required_attr = "required" if param_info.required else ""
+                
+                form_inputs += FORM_INPUT_TEMPLATE.format(
+                    name=param_name,
+                    tool_name=name,
+                    required_mark=required_mark,
+                    required_attr=required_attr,
+                    input_type=input_type
+                )
+            
+            # Create tool card
+            tool_card = TOOL_CARD_TEMPLATE.format(
+                name=name,
+                description=schema.description,
+                params_rows=params_rows,
+                form_inputs=form_inputs
+            )
+            
+            tools_html += tool_card
+        
+        # Create documentation page
+        html_content = DOCS_TEMPLATE.format(
+            app_name=self.name,
+            sse_endpoint=self.sse_endpoint,
+            sse_path=self.sse_path,
+            tools_html=tools_html
+        )
+        
+        return HTMLResponse(html_content)
+    
     def _create_starlette_app(self):
         """Create the Starlette application."""
         if self.starlette_app is None:
+            routes = [
+                Route(self.sse_endpoint, endpoint=self._handle_sse),
+                Mount(self.sse_path, app=self.sse.handle_post_message),
+            ]
+            
+            # Add documentation page if enabled
+            if self.docs_url:
+                routes.append(Route(self.docs_url, endpoint=self._handle_docs))
+            
             self.starlette_app = Starlette(
                 debug=self.debug,
-                routes=[
-                    Route(self.sse_endpoint, endpoint=self._handle_sse),
-                    Mount(self.sse_path, app=self.sse.handle_post_message),
-                ],
+                routes=routes,
             )
         return self.starlette_app
     
@@ -246,6 +349,7 @@ class EzMCP:
         import uvicorn
         
         app = self._create_starlette_app()
+        print(f"Documentation available at: http://{host}:{port}{self.docs_url}")
         uvicorn.run(app, host=host, port=port)
     
     def get_app(self):

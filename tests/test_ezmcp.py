@@ -13,8 +13,9 @@ def test_app_initialization():
     """Test that the EzMCP application initializes correctly."""
     app = EzMCP("test-app")
     assert app.name == "test-app"
-    assert app.sse_path == "/messages"
+    assert app.sse_path == "/messages/"
     assert app.sse_endpoint == "/sse"
+    assert app.docs_url == "/docs"
     assert app.debug is False
 
 
@@ -64,7 +65,7 @@ def test_starlette_app_creation(app):
     
     # Check routes
     routes = starlette_app.routes
-    assert len(routes) == 2
+    assert len(routes) == 3  # SSE endpoint, messages mount, and docs
     
     # Check SSE endpoint
     sse_route = routes[0]
@@ -72,4 +73,22 @@ def test_starlette_app_creation(app):
     
     # Check messages mount
     messages_mount = routes[1]
-    assert messages_mount.path == "/messages"  # Starlette removes trailing slash 
+    assert messages_mount.path == "/messages"  # Starlette removes trailing slash
+    
+    # Check docs endpoint
+    docs_route = routes[2]
+    assert docs_route.path == "/docs"
+
+
+def test_docs_disabled():
+    """Test that the docs endpoint can be disabled."""
+    app = EzMCP("test-app", docs_url=None)
+    starlette_app = app.get_app()
+    
+    # Check routes
+    routes = starlette_app.routes
+    assert len(routes) == 2  # Only SSE endpoint and messages mount
+    
+    # Check route paths
+    paths = [route.path for route in routes]
+    assert "/docs" not in paths 

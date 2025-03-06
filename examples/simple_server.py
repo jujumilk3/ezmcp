@@ -41,10 +41,12 @@ async def greet(name: str = "World"):
 
 
 if __name__ == "__main__":
-    print("Starting EzMCP server on http://localhost:8000/sse")
+    print("Starting EzMCP server on http://localhost:8000")
     print("Available tools:")
     for name, tool_info in app.tools.items():
         print(f"  - {name}: {tool_info['schema'].description}")
+    print("\nDocumentation available at: http://localhost:8000/docs")
+    print("SSE endpoint available at: http://localhost:8000/sse")
     print("\nPress Ctrl+C to stop the server")
     
     # Run the application

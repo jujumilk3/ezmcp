@@ -34,6 +34,7 @@ if __name__ == "__main__":
 - Automatic generation of tool schemas from function signatures
 - Built-in support for SSE transport
 - Easy integration with existing Starlette applications
+- Interactive documentation page for exploring and testing tools
 
 ## API Reference
 
@@ -44,8 +45,9 @@ The main application class.
 ```python
 app = EzMCP(
     name="my-app",                # Name of the MCP server
-    sse_path="/messages",        # Path for SSE messages
+    sse_path="/messages/",        # Path for SSE messages
     sse_endpoint="/sse",          # Endpoint for SSE connections
+    docs_url="/docs",             # URL for the documentation page (set to None to disable)
     debug=False                   # Whether to enable debug mode
 )
 ```
@@ -82,6 +84,18 @@ Get the Starlette application for integration with other frameworks.
 ```python
 starlette_app = app.get_app()
 ```
+
+## Documentation Page
+
+EzMCP automatically generates an interactive documentation page at `/docs` (configurable via the `docs_url` parameter). This page provides:
+
+- A list of all available tools
+- Detailed information about each tool's parameters
+- An interactive interface for testing tools
+
+To access the documentation page, navigate to `http://your-server:port/docs` in your browser.
+
+![Documentation Page](https://via.placeholder.com/800x400?text=EzMCP+Documentation+Page)
 
 ## Response Types
 
@@ -132,6 +146,14 @@ main_app = Starlette(
         # Add other routes here
     ]
 )
+```
+
+### Disabling the Documentation Page
+
+If you want to disable the documentation page, set `docs_url` to `None`:
+
+```python
+app = EzMCP("my-app", docs_url=None)
 ```
 
 ## License
