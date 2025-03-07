@@ -16,9 +16,11 @@ import mcp.types as mcp_types
 from mcp.server.lowlevel import Server
 from mcp.server.sse import SseServerTransport
 from starlette.applications import Starlette
+from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import HTMLResponse
 from starlette.routing import Mount, Route
 
+from ezmcp.middleware import Middleware, create_middleware_decorator
 from ezmcp.templates import (
     DOCS_TEMPLATE,
     FORM_INPUT_TEMPLATE,
@@ -78,10 +80,31 @@ class ezmcp:
         # Store registered tools
         self.tools: Dict[str, Dict[str, Any]] = {}
 
+        # Store middleware
+        self.user_middleware: List[Middleware] = []
+
+        # Create middleware decorator
+        self.middleware = create_middleware_decorator(self)
+
         # Set up server handlers
         self._setup_server_handlers()
 
         # Create Starlette app
+        self.starlette_app = None
+
+    def add_middleware(
+        self, middleware_class: Type[BaseHTTPMiddleware], *args: Any, **kwargs: Any
+    ) -> None:
+        """
+        Add middleware to the application.
+
+        Args:
+            middleware_class: The middleware class to add
+            *args: Positional arguments to pass to the middleware
+            **kwargs: Keyword arguments to pass to the middleware
+        """
+        self.user_middleware.append(Middleware(middleware_class, *args, **kwargs))
+        # Reset starlette_app to ensure middleware is applied
         self.starlette_app = None
 
     def _setup_server_handlers(self):
@@ -220,9 +243,15 @@ class ezmcp:
             if self.docs_url:
                 routes.append(Route(self.docs_url, endpoint=self._handle_docs))
 
+            # Create middleware list for Starlette
+            middleware = []
+            for m in self.user_middleware:
+                middleware.append(m)
+
             self.starlette_app = Starlette(
                 debug=self.debug,
                 routes=routes,
+                middleware=middleware,
             )
         return self.starlette_app
 
