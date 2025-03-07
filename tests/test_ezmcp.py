@@ -13,7 +13,7 @@ def test_app_initialization():
     """Test that the ezmcp application initializes correctly."""
     app = ezmcp("test-app")
     assert app.name == "test-app"
-    assert app.sse_path == "/messages"
+    assert app.sse_path == "/messages/"
     assert app.sse_endpoint == "/sse"
     assert app.docs_url == "/docs"
     assert app.debug is False
