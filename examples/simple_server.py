@@ -1,6 +1,7 @@
 """
 A simple example of using ezmcp to create a server with tools.
 """
+
 import httpx
 
 from ezmcp import ImageContent, TextContent, ezmcp
@@ -18,9 +19,7 @@ async def echo(message: str):
 @app.tool(description="Fetch a website and return its content")
 async def fetch_website(url: str):
     """Fetch a website and return its content."""
-    headers = {
-        "User-Agent": "ezmcp Example (github.com/jujumilk3/ezmcp)"
-    }
+    headers = {"User-Agent": "ezmcp Example (github.com/jujumilk3/ezmcp)"}
     async with httpx.AsyncClient(follow_redirects=True, headers=headers) as client:
         response = await client.get(url)
         response.raise_for_status()
@@ -48,6 +47,6 @@ if __name__ == "__main__":
     print("\nDocumentation available at: http://localhost:8000/docs")
     print("SSE endpoint available at: http://localhost:8000/sse")
     print("\nPress Ctrl+C to stop the server")
-    
+
     # Run the application
-    app.run(host="0.0.0.0", port=8000) 
+    app.run(host="0.0.0.0", port=8000)

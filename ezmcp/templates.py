@@ -262,4 +262,4 @@ FORM_INPUT_TEMPLATE = """
     <label for="{name}-{tool_name}">{name}{required_mark}</label>
     <input type="{input_type}" id="{name}-{tool_name}" name="{name}" {required_attr}>
 </div>
-""" 
+"""

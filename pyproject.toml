@@ -25,15 +25,9 @@ homepage = "https://github.com/jujumilk3/ezmcp"
 bug-tracker = "https://github.com/jujumilk3/ezmcp/issues"
 
 [project.optional-dependencies]
-test = [
-    "pytest",
-]
-dev = [
-    "pytest",
-    "ruff",
-]
+test = ["pytest"]
+dev = ["pytest", "ruff"]
 
 [tool.pdm]
 version = { source = "file", path = "ezmcp/__init__.py" }
 distribution = true
-
