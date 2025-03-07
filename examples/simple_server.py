@@ -2,7 +2,10 @@
 A simple example of using ezmcp to create a server with tools.
 """
 
+import base64
+
 import httpx
+from mcp.server.fastmcp import FastMCP, Image
 
 from ezmcp import ImageContent, TextContent, ezmcp
 
@@ -37,6 +40,15 @@ async def add(a: int, b: int = 0):
 async def greet(name: str = "World"):
     """Get a greeting with the user's name."""
     return [TextContent(type="text", text=f"Hello, {name}!")]
+
+
+@app.tool(description="Fetch a sample image")
+async def fetch_image():
+    """Fetch a sample image."""
+    downloaded_image = httpx.get("https://placehold.co/600x400")
+    as_binary = downloaded_image.content
+    as_base64 = base64.b64encode(as_binary).decode("utf-8")
+    return [ImageContent(type="image", data=as_base64, mimeType="image/png")]
 
 
 if __name__ == "__main__":

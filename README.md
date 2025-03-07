@@ -1,6 +1,6 @@
 # ezmcp
 
-A FastAPI-style framework for using MCP (Model Context Protocol) with Server-Sent Events (SSE).
+Easy-to-use MCP server framework specialized for SSE.
 
 ## Overview
 
