@@ -1,9 +1,8 @@
-from typing import Any, Awaitable, Callable, Iterator, List, Optional, Type, Union
+from typing import Any, Awaitable, Callable, Iterator, Type
 
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import Response
-from starlette.types import ASGIApp, Receive, Scope, Send
 
 
 class Middleware:

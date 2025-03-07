@@ -1,4 +1,3 @@
-import functools
 import inspect
 from typing import (
     Annotated,
@@ -8,7 +7,6 @@ from typing import (
     List,
     Optional,
     Type,
-    Union,
     get_type_hints,
 )
 

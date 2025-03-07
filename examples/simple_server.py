@@ -5,7 +5,6 @@ A simple example of using ezmcp to create a server with tools.
 import base64
 
 import httpx
-from mcp.server.fastmcp import FastMCP, Image
 
 from ezmcp import ImageContent, TextContent, ezmcp
 

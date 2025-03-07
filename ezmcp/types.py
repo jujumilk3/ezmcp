@@ -1,15 +1,10 @@
-import inspect
 from typing import (
-    Annotated,
     Any,
     Callable,
-    Dict,
     List,
     Optional,
     Type,
-    TypeVar,
     Union,
-    get_type_hints,
 )
 
 from mcp.types import EmbeddedResource, ImageContent, TextContent, Tool

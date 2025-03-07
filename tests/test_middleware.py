@@ -1,6 +1,5 @@
 import pytest
 from starlette.requests import Request
-from starlette.responses import Response
 from starlette.testclient import TestClient
 
 from ezmcp import EzmcpHTTPMiddleware, TextContent, ezmcp
