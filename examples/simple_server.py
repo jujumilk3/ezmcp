@@ -3,6 +3,7 @@ A simple example of using ezmcp to create a server with tools.
 """
 
 import base64
+import json
 
 import httpx
 
@@ -16,6 +17,18 @@ app = ezmcp("simple-server", debug=True)
 async def echo(message: str):
     """Echo a message back to the user."""
     return [TextContent(type="text", text=f"Echo: {message}")]
+
+
+@app.tool(description="Return user information as JSON")
+async def user_info(name: str, age: int, is_active: bool = True):
+    """Return user information as JSON."""
+    user_data = {
+        "name": name,
+        "age": age,
+        "is_active": is_active,
+        "status": "active" if is_active else "inactive",
+    }
+    return [TextContent(type="text", text=json.dumps(user_data, indent=2))]
 
 
 @app.tool(description="Fetch a website and return its content")

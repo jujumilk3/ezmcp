@@ -10,9 +10,17 @@ from typing import (
 from mcp.types import EmbeddedResource, ImageContent, TextContent, Tool
 
 # Re-export MCP types
-__all__ = ["TextContent", "ImageContent", "EmbeddedResource", "Tool", "Response"]
+__all__ = [
+    "TextContent",
+    "ImageContent",
+    "EmbeddedResource",
+    "Tool",
+    "Response",
+]
 
-# Type alias for response content
+# Type alias for response content.
+# Because mcp python sdk's CallToolResult is limited to only below types:
+# mcp.types.CallToolResult
 Response = List[Union[TextContent, ImageContent, EmbeddedResource]]
 
 # Type for tool function

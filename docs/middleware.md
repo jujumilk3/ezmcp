@@ -84,6 +84,7 @@ async def third_middleware(request: Request, call_next):
 ```
 
 In this example, the middleware execution order would be:
+
 1. `third_middleware`
 2. `second_middleware`
 3. `first_middleware`
@@ -129,4 +130,4 @@ app.add_middleware(CustomMiddleware, custom_arg="custom value")
 
 ## Examples
 
-See the [middleware_example.py](../examples/middleware_example.py) file for a complete example of using middleware with ezmcp. 
+See the [middleware_example.py](../examples/middleware_example.py) file for a complete example of using middleware with ezmcp.
