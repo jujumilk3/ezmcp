@@ -16,6 +16,8 @@ ezmcp is a lightweight framework that makes it easy to create MCP-compatible ser
 - Easy integration with existing Starlette applications
 - Interactive documentation page for exploring and testing tools
 
+![docs_image](./docs/images/docs.png)
+
 ## Installation
 
 ```bash
