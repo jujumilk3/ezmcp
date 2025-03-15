@@ -256,7 +256,7 @@ class ezmcp:
     def _extract_param_info(self, func: Callable) -> Dict[str, ParamInfo]:
         """Extract parameter information from a function."""
         signature = inspect.signature(func)
-        type_hints = get_type_hints(func)
+        type_hints = get_type_hints(func, include_extras=True)
 
         params = {}
         for name, param in signature.parameters.items():
@@ -268,15 +268,21 @@ class ezmcp:
             has_default = param.default is not inspect.Parameter.empty
             default_value = param.default if has_default else None
 
-            # Extract description from docstring or annotations if available
+            # Extract description from Annotated type if available
             description = None
-            if isinstance(param_type, type(Annotated)):
-                # Handle Annotated types for descriptions
-                pass
-
+            original_type = param_type
+            
+            # get_type_hints with include_extras=True returns _AnnotatedAlias for Annotated types
+            if hasattr(param_type, "__metadata__"):
+                metadata = param_type.__metadata__
+                if metadata and isinstance(metadata[0], str):
+                    description = metadata[0]
+                if hasattr(param_type, "__origin__"):
+                    param_type = param_type.__origin__
+            
             params[name] = ParamInfo(
                 name=name,
-                type_=param_type,
+                type_=original_type,  # 원본 타입 저장 (Annotated 포함)
                 required=not has_default,
                 description=description,
                 default=default_value,
@@ -325,8 +331,14 @@ class ezmcp:
                 "type": type_name,
             }
 
+            # 파라미터 설명 추가
             if param_info.description:
                 property_schema["description"] = param_info.description
+            elif hasattr(param_info.type, "__metadata__"):
+                # Annotated 타입에서 description 추출 시도
+                metadata = param_info.type.__metadata__
+                if metadata and isinstance(metadata[0], str):
+                    property_schema["description"] = metadata[0]
 
             properties[param_name] = property_schema
 
